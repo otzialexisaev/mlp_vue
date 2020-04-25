@@ -1,19 +1,27 @@
 <template>
-  <div></div>
+  <div>
+    <PlayerContainer></PlayerContainer>
+    <SongsContainer> </SongsContainer>
+  </div>
 </template>
 
 <script>
-import Player from "@/assets/js/player/Player";
+import PlayerClass from "@/assets/js/player/newPlayer";
+import PlayerContainer from "@/components/player/Player";
+import SongsContainer from "@/components/player/SongsContainer";
 export default {
+  components: {
+    PlayerContainer,
+    SongsContainer,
+  },
   mounted() {
-    console.log(123);
+    let player = new PlayerClass();
+    console.log(player);
 
-    let player = new Player();
-    player.init();
+    // player.init();
     // Player.init();
-  }
+  },
 };
 </script>
 
-<style>
-</style>
+<style></style>
