@@ -1,18 +1,23 @@
 <template>
-  <div class="song-wrapper">
-    <div
-      class="song-container notextselect"
-      data-audio=""
-      data-songid=""
-      data-songname=""
-    >
-      songitem
+  <div @click="songClicked" class="song-wrapper">
+    <div class="song-container notextselect" :data-songId="songId">
+      {{ title }}
     </div>
   </div>
 </template>
 
 <script>
-export default {};
+export default {
+  props: {
+    title: { type: String },
+    songId: { type: String },
+  },
+  methods: {
+    songClicked() {
+      this.$store.commit("playPause", this.$props.songId);
+    },
+  },
+};
 </script>
 
 <style>

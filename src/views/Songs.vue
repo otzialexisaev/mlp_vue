@@ -1,12 +1,11 @@
 <template>
   <div>
     <PlayerContainer></PlayerContainer>
-    <SongsContainer> </SongsContainer>
+    <SongsContainer></SongsContainer>
   </div>
 </template>
 
 <script>
-import PlayerClass from "@/assets/js/player/newPlayer";
 import PlayerContainer from "@/components/player/Player";
 import SongsContainer from "@/components/player/SongsContainer";
 export default {
@@ -15,9 +14,10 @@ export default {
     SongsContainer,
   },
   mounted() {
-    let player = new PlayerClass();
-    console.log(player);
-
+    console.log(this.$store);
+    for (let value in this.$store.state.songs) {
+      console.log(value);
+    }
     // player.init();
     // Player.init();
   },

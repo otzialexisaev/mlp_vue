@@ -1,6 +1,8 @@
 <template>
   <div class="songs-grid">
-    <SongItem></SongItem>
+    <div :key="id" v-for="(value, id) in $store.state.songs">
+      <SongItem :title="value.title" :songId="id">song</SongItem>
+    </div>
   </div>
 </template>
 
@@ -9,11 +11,6 @@ import SongItem from "@/components/player/SongItem";
 export default {
   components: {
     SongItem,
-  },
-  data() {
-    return {
-      songs: [{}],
-    };
   },
 };
 </script>
