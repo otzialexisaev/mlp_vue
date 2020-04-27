@@ -2,20 +2,22 @@
   <div id="playercontainer">
     <div class="playerbuttons">
       <img
-        @dragstart="preventDefault"
+        @click="previous"
+        @dragstart.prevent
         src="../../assets/img/playercontainer/prevBtn.jpg"
         id="prevBtn"
         class="btnWrapper"
       />
       <img
-        @dragstart="preventDefault"
         @click="playPause"
-        src="../../assets/img/playercontainer/playBtn.jpg"
+        @dragstart.prevent
+        :src="playPauseBtn"
         id="playPauseBtn"
         class="btnWrapper"
       />
       <img
-        @dragstart="preventDefault"
+        @click="next"
+        @dragstart.prevent
         src="../../assets/img/playercontainer/nextBtn.jpg"
         id="nextBtn"
         class="btnWrapper"
@@ -23,17 +25,17 @@
     </div>
     <div class="songInfoContainer">
       <div class="titlePlusTime">
-        <div id="songTitle">No song selected</div>
-        <div id="songTime">0:00 - 0:00</div>
+        <div id="songTitle">{{title}}</div>
+        <div id="songTime">{{time}}</div>
       </div>
       <div class="scrubber" id="scrubber">
-        <div id="progressBar"></div>
+        <div id="progressBar" :style="progressBar"></div>
       </div>
     </div>
     <div class="playerbuttons">
       <img
         @click="toggleRandom"
-        @dragstart="preventDefault"
+        @dragstart.prevent
         :class="{ btnHighlight: random }"
         src="../../assets/img/playercontainer/randomBtn.jpg"
         id="randomBtn"
@@ -41,7 +43,7 @@
       />
       <img
         @click="toggleRepeatOne"
-        @dragstart="preventDefault"
+        @dragstart.prevent
         :class="{ btnHighlight: repeatOne }"
         src="../../assets/img/playercontainer/repeatAllBtn.jpg"
         id="repeatAllBtn"
@@ -49,25 +51,16 @@
       />
       <img
         @click="toggleRepeatAll"
-        @dragstart="preventDefault"
+        @dragstart.prevent
         :class="{ btnHighlight: repeatAll }"
         src="../../assets/img/playercontainer/repeatOneBtn.jpg"
         id="repeatOneBtn"
         class="btnWrapper"
       />
     </div>
-    <div
-      style="position: absolute;top: -16px;right: -164px;/* float: right; */"
-    >
+    <div style="position: absolute;top: -16px;right: -164px;/* float: right; */">
       <div id="audioSliderContainer">
-        <input
-          type="range"
-          min="1"
-          max="100"
-          value="50"
-          class="slider"
-          id="myRange"
-        />
+        <input type="range" min="1" max="100" value="50" class="slider" id="myRange" />
       </div>
     </div>
     <audio id="audio" controls :src="src"></audio>
@@ -77,20 +70,79 @@
 <script>
 // import Player from "@/assets/js/player/newPlayer";
 export default {
+  props: ["newCurrentSong"],
+  computed: {
+    playPauseBtn() {
+      if (this.isPaused)
+        return require("../../assets/img/playercontainer/playBtn.jpg");
+      else return require("../../assets/img/playercontainer/pauseBtn.jpg");
+    },
+    src() {
+      return this.$store.state.currentSong.src;
+    },
+    title() {
+      return this.$store.state.currentSong.title;
+    },
+    time() {
+      return this.currentTime + "-" + this.duration;
+    },
+    progressBar() {
+      return this.progressBarStyle;
+    }
+  },
   data() {
     return {
-      audio: null,
+      isPaused: true,
       random: false,
       repeatOne: false,
       repeatAll: false,
-      src: "./files/Classmate.mp3",
+      audio: document.getElementById("audio"),
+      duration: "00:00",
+      currentTime: "00:00",
+      durationTime: 0,
+      currentTimeTime: 0,
+      progressBarStyle: {
+        width: "0px"
+      }
     };
   },
-  beforeMount() {},
   methods: {
-    playPause() {
+    async playPause() {
+      if (this.$store.getters.getCurrentSong.id === false) {
+        await this.$store.commit("setCurrentSong", 0);
+        this.play();
+        return;
+      }
+
+      if (this.audio.paused) this.play();
+      else this.pause();
+    },
+    async next() {
+      let index = this.$store.getters.getCurrentSong.index;
+      if (index >= 0 && index < this.$store.getters.getSongsCount - 1) {
+        await this.$store.commit("setCurrentSong", index + 1);
+        this.play();
+      }
+    },
+    async previous() {
+      let index = this.$store.getters.getCurrentSong.index;
+      if (index >= 1 && index < this.$store.getters.getSongsCount) {
+        await this.$store.commit("setCurrentSong", index - 1);
+        this.play();
+      }
+    },
+    replaySame() {
+      this.audio.currentTime = 0;
       if (this.audio.paused) this.audio.play();
-      else this.audio.pause();
+    },
+    play() {
+      if (this.audio.src === "") return;
+      this.audio.play();
+      this.isPaused = false;
+    },
+    pause() {
+      this.audio.pause();
+      this.isPaused = true;
     },
     toggleRandom() {
       this.random = !this.random;
@@ -101,13 +153,41 @@ export default {
     toggleRepeatAll() {
       this.repeatAll = !this.repeatAll;
     },
-    preventDefault(e) {
-      e.preventDefault();
+    update() {
+      this.currentTime = this.convertTimeHHMMSS(this.audio.currentTime);
+      this.currentTimeTime = this.audio.currentTime;
+
+      let instance = document.getElementById("scrubber");
+      let oneWidthPercent = instance.offsetWidth / 100;
+      this.progressBar.width =
+        (this.currentTimeTime / this.durationTime) * oneWidthPercent * 100 +
+        "px";
     },
+    load() {
+      this.duration = this.convertTimeHHMMSS(this.audio.duration);
+      this.durationTime = this.audio.duration;
+    },
+    ended() {
+      if (this.repeatOne) this.replaySame();
+      this.next();
+    },
+    convertTimeHHMMSS(val) {
+      let hhmmss = new Date(val * 1000).toISOString().substr(11, 8);
+      return hhmmss.indexOf("00:") === 0 ? hhmmss.substr(3) : hhmmss;
+    }
   },
   mounted() {
     this.audio = document.getElementById("audio");
-  },
+    this.audio.addEventListener("timeupdate", this.update);
+    this.audio.addEventListener("loadeddata", this.load);
+    this.audio.addEventListener("ended", this.ended);
+    // this.audio.addEventListener("pause", () => {
+    //   this.playing = false;
+    // });
+    // this.audio.addEventListener("play", () => {
+    //   this.playing = true;
+    // });
+  }
 };
 </script>
 

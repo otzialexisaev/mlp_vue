@@ -1,8 +1,10 @@
 <template>
   <div @click="songClicked" class="song-wrapper">
-    <div class="song-container notextselect" :data-songId="songId">
-      {{ title }}
-    </div>
+    <div
+      class="song-container notextselect"
+      :class="{selected: checkSelected}"
+      :data-songId="songIndex"
+    >{{ title }}</div>
   </div>
 </template>
 
@@ -10,13 +12,19 @@
 export default {
   props: {
     title: { type: String },
-    songId: { type: String },
+    songIndex: {}
   },
   methods: {
-    songClicked() {
-      this.$store.commit("playPause", this.$props.songId);
-    },
+    async songClicked() {
+      await this.$store.commit("setCurrentSong", this.$props.songIndex);
+      this.$emit("song-clicked");
+    }
   },
+  computed: {
+    checkSelected() {
+      return this.$props.songIndex === this.$store.getters.getCurrentSong.index;
+    }
+  }
 };
 </script>
 

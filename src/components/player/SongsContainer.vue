@@ -1,7 +1,7 @@
 <template>
   <div class="songs-grid">
-    <div :key="id" v-for="(value, id) in $store.state.songs">
-      <SongItem :title="value.title" :songId="id">song</SongItem>
+    <div :key="index" v-for="(value, index) in $store.state.songs">
+      <SongItem @song-clicked="songClicked" :title="value.title" :songIndex="index"></SongItem>
     </div>
   </div>
 </template>
@@ -10,8 +10,13 @@
 import SongItem from "@/components/player/SongItem";
 export default {
   components: {
-    SongItem,
+    SongItem
   },
+  methods: {
+    songClicked() {
+      this.$emit("song-clicked");
+    }
+  }
 };
 </script>
 

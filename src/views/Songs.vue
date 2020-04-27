@@ -1,7 +1,7 @@
 <template>
   <div>
-    <PlayerContainer></PlayerContainer>
-    <SongsContainer></SongsContainer>
+    <PlayerContainer ref="PlayerContainer" :newCurrentSong="newCurrentSong"></PlayerContainer>
+    <SongsContainer @song-clicked="songClicked"></SongsContainer>
   </div>
 </template>
 
@@ -9,18 +9,21 @@
 import PlayerContainer from "@/components/player/Player";
 import SongsContainer from "@/components/player/SongsContainer";
 export default {
+  data() {
+    return {
+      newCurrentSong: {}
+    };
+  },
   components: {
     PlayerContainer,
-    SongsContainer,
+    SongsContainer
   },
-  mounted() {
-    console.log(this.$store);
-    for (let value in this.$store.state.songs) {
-      console.log(value);
+  methods: {
+    songClicked() {
+      this.$refs.PlayerContainer.playPause();
     }
-    // player.init();
-    // Player.init();
   },
+  mounted() {}
 };
 </script>
 
