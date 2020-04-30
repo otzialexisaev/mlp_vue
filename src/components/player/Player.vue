@@ -25,8 +25,8 @@
     </div>
     <div class="songInfoContainer">
       <div class="titlePlusTime">
-        <div id="songTitle">{{title}}</div>
-        <div id="songTime">{{time}}</div>
+        <div id="songTitle">{{ title }}</div>
+        <div id="songTime">{{ time }}</div>
       </div>
       <div class="scrubber" id="scrubber">
         <div id="progressBar" :style="progressBar"></div>
@@ -58,9 +58,18 @@
         class="btnWrapper"
       />
     </div>
-    <div style="position: absolute;top: -16px;right: -164px;/* float: right; */">
+    <div
+      style="position: absolute;top: -16px;right: -164px;/* float: right; */"
+    >
       <div id="audioSliderContainer">
-        <input type="range" min="1" max="100" value="50" class="slider" id="myRange" />
+        <input
+          type="range"
+          min="1"
+          max="100"
+          value="50"
+          class="slider"
+          id="myRange"
+        />
       </div>
     </div>
     <audio id="audio" controls :src="src"></audio>
@@ -88,7 +97,7 @@ export default {
     },
     progressBar() {
       return this.progressBarStyle;
-    }
+    },
   },
   data() {
     return {
@@ -101,9 +110,28 @@ export default {
       currentTime: "00:00",
       durationTime: 0,
       currentTimeTime: 0,
+      scrubber: {
+        instance: false,
+        getClickedDuration(e) {
+          var relativeLeft = e.clientX - leftPos(this.instance);
+          console.log(relativeLeft);
+
+          return relativeLeft;
+
+          function leftPos(elem) {
+            var curleft = 0;
+            if (elem.offsetParent) {
+              do {
+                curleft += elem.offsetLeft;
+              } while ((elem = elem.offsetParent));
+            }
+            return curleft;
+          }
+        },
+      },
       progressBarStyle: {
-        width: "0px"
-      }
+        width: "0px",
+      },
     };
   },
   methods: {
@@ -157,8 +185,7 @@ export default {
       this.currentTime = this.convertTimeHHMMSS(this.audio.currentTime);
       this.currentTimeTime = this.audio.currentTime;
 
-      let instance = document.getElementById("scrubber");
-      let oneWidthPercent = instance.offsetWidth / 100;
+      let oneWidthPercent = this.scrubber.instance.offsetWidth / 100;
       this.progressBar.width =
         (this.currentTimeTime / this.durationTime) * oneWidthPercent * 100 +
         "px";
@@ -174,20 +201,37 @@ export default {
     convertTimeHHMMSS(val) {
       let hhmmss = new Date(val * 1000).toISOString().substr(11, 8);
       return hhmmss.indexOf("00:") === 0 ? hhmmss.substr(3) : hhmmss;
-    }
+    },
+    setCurrent(current, width) {
+      // this.instance.duration = duration;
+      if (isNaN((this.audio.duration / 100) * ((current / width) * 100))) {
+        return;
+      }
+      this.audio.currentTime =
+        (this.audio.duration / 100) * ((current / width) * 100);
+    },
   },
   mounted() {
     this.audio = document.getElementById("audio");
     this.audio.addEventListener("timeupdate", this.update);
     this.audio.addEventListener("loadeddata", this.load);
     this.audio.addEventListener("ended", this.ended);
+
+    this.scrubber.instance = document.getElementById("scrubber");
+    this.scrubber.instance.addEventListener("click", (e) =>
+      this.setCurrent(
+        this.scrubber.getClickedDuration(e),
+        this.scrubber.instance.offsetWidth
+      )
+    );
+
     // this.audio.addEventListener("pause", () => {
     //   this.playing = false;
     // });
     // this.audio.addEventListener("play", () => {
     //   this.playing = true;
     // });
-  }
+  },
 };
 </script>
 
