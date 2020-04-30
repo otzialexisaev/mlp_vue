@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import axios from 'axios'
 
 Vue.use(Vuex)
 
@@ -35,7 +36,16 @@ export default new Vuex.Store({
       return state.songs.length
     }
   },
+  actions: {
+    async fetchSongs ({ commit }) {
+      let response = await axios.get('http://mylaravelplaylist.com/api/songs')
+      commit('setSongs', response.data)
+    }
+  },
   mutations: {
+    setSongs (state, songs) {
+      state.songs = songs
+    },
     setCurrentSong (state, songIndex) {
       state.currentSong = {
         id: state.songs[songIndex].id,
@@ -50,6 +60,5 @@ export default new Vuex.Store({
       // console.log('store -> setCurrentSong')
     }
   },
-  actions: {},
   modules: {}
 })
