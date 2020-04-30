@@ -105,7 +105,27 @@ export default {
       random: false,
       repeatOne: false,
       repeatAll: false,
-      audio: document.getElementById("audio"),
+      audio: {
+        instance: false,
+        play() {
+          this.instance.play();
+        },
+        pause() {
+          this.instance.pause();
+        },
+        init() {
+          this.instance = document.getElementById("audio");
+        },
+        ontimeupdate(callback) {
+          this.instance.addEventListener("timeupdate", () => callback());
+        },
+        onload(callback) {
+          this.instance.addEventListener("loadeddata", () => callback());
+        },
+        onended(callback) {
+          this.instance.addEventListener("ended", () => callback());
+        },
+      },
       duration: "00:00",
       currentTime: "00:00",
       durationTime: 0,
@@ -114,8 +134,6 @@ export default {
         instance: false,
         getClickedDuration(e) {
           var relativeLeft = e.clientX - leftPos(this.instance);
-          console.log(relativeLeft);
-
           return relativeLeft;
 
           function leftPos(elem) {
@@ -132,6 +150,12 @@ export default {
       progressBarStyle: {
         width: "0px",
       },
+      initAudio() {
+        this.audio.init();
+        this.audio.ontimeupdate(this.update);
+        this.audio.onload(this.load);
+        this.audio.onended(this.ended);
+      },
     };
   },
   methods: {
@@ -142,7 +166,7 @@ export default {
         return;
       }
 
-      if (this.audio.paused) this.play();
+      if (this.audio.instance.paused) this.play();
       else this.pause();
     },
     async next() {
@@ -160,11 +184,11 @@ export default {
       }
     },
     replaySame() {
-      this.audio.currentTime = 0;
-      if (this.audio.paused) this.audio.play();
+      this.audio.instance.currentTime = 0;
+      if (this.audio.instance.paused) this.audio.play();
     },
     play() {
-      if (this.audio.src === "") return;
+      if (this.audio.instance.src === "") return;
       this.audio.play();
       this.isPaused = false;
     },
@@ -182,17 +206,28 @@ export default {
       this.repeatAll = !this.repeatAll;
     },
     update() {
-      this.currentTime = this.convertTimeHHMMSS(this.audio.currentTime);
-      this.currentTimeTime = this.audio.currentTime;
+      console.log(123);
+
+      this.currentTime = this.convertTimeHHMMSS(
+        this.audio.instance.currentTime
+      );
+      this.currentTimeTime = this.audio.instance.currentTime;
 
       let oneWidthPercent = this.scrubber.instance.offsetWidth / 100;
+      console.log(this.currentTimeTime);
+      console.log(this.durationTime);
+
       this.progressBar.width =
         (this.currentTimeTime / this.durationTime) * oneWidthPercent * 100 +
         "px";
+      console.log(
+        (this.currentTimeTime / this.durationTime) * oneWidthPercent * 100 +
+          "px"
+      );
     },
     load() {
-      this.duration = this.convertTimeHHMMSS(this.audio.duration);
-      this.durationTime = this.audio.duration;
+      this.duration = this.convertTimeHHMMSS(this.audio.instance.duration);
+      this.durationTime = this.audio.instance.duration;
     },
     ended() {
       if (this.repeatOne) this.replaySame();
@@ -204,18 +239,17 @@ export default {
     },
     setCurrent(current, width) {
       // this.instance.duration = duration;
-      if (isNaN((this.audio.duration / 100) * ((current / width) * 100))) {
+      if (
+        isNaN((this.audio.instance.duration / 100) * ((current / width) * 100))
+      )
         return;
-      }
-      this.audio.currentTime =
-        (this.audio.duration / 100) * ((current / width) * 100);
+
+      this.audio.instance.currentTime =
+        (this.audio.instance.duration / 100) * ((current / width) * 100);
     },
   },
   mounted() {
-    this.audio = document.getElementById("audio");
-    this.audio.addEventListener("timeupdate", this.update);
-    this.audio.addEventListener("loadeddata", this.load);
-    this.audio.addEventListener("ended", this.ended);
+    this.initAudio();
 
     this.scrubber.instance = document.getElementById("scrubber");
     this.scrubber.instance.addEventListener("click", (e) =>
